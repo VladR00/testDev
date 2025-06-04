@@ -1,0 +1,14 @@
+[Unit]
+Description=Monitoring Service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/home/user/script
+WorkingDirectory=/home/user/
+Restart=always
+User=user
+Group=user
+
+[Install]
+WantedBy=multi-user.target

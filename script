@@ -1,0 +1,40 @@
+#!/bin/bash
+logfile="/var/log/monitoring.log"
+
+signal_reboot(){
+    echo "$(date): Сигнал перезапуска получен, запись в $logfile" >> $logfile;
+    tail -n 1 "$logfile";
+    exit;
+}
+
+badrequest(){
+    echo "Сервер не отвечает в $(date), запись в $logfile" >> $logfile;
+    tail -n 1 "$logfile";
+}
+
+trap 'signal_reboot "SIGHUP"' SIGINT 
+
+if [[ -f $logfile ]];
+    then
+        echo "$(date): Сервис мониторинга запущен" >> "/var/log/monitoring.log";
+        tail -n 1 "$logfile";
+    else 
+    sudo touch $logfile
+    sudo chmod 666 $logfile
+    echo "$(date): Сервис мониторинга запущен" >> "/var/log/monitoring.log";
+    tail -n 1 "$logfile";
+fi
+
+while true; do
+    echo "$(date): Запрос к серверу"
+    response=$(curl -f --max-time 10  -w "HTTP: %{http_code}\nPing: %{time_total}) ms" -s https://test.com/monitoring/test/api) 
+
+    if [[ $? -ne 0 ]];
+    then
+        badrequest
+    else
+        echo "$response"
+    fi
+    sleep 60
+done
+
